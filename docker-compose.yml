@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://ytm:ytmpassword@db:5432/ytm
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - downloads:/tmp/ytm-downloads
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=ytm
+      - POSTGRES_PASSWORD=ytmpassword
+      - POSTGRES_DB=ytm
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Optional: Celery worker for background tasks
+  # worker:
+  #   build: .
+  #   command: celery -A app.worker worker --loglevel=info
+  #   depends_on:
+  #     - db
+  #     - redis
+
+volumes:
+  postgres_data:
+  redis_data:
+  downloads:
